@@ -1,0 +1,12 @@
+#To start the Redis server
+docker run --name redis -p 6379:6379 -d redis
+
+#To see the logs
+docker logs redis
+
+##To see the detailed logs
+docker exec -it redis redis-cli
+127.0.0.1:6379> keys *
+1) "employees::1"
+2) "employees::2"
+3) "employees::3"
