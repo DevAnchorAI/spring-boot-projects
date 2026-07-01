@@ -5,6 +5,7 @@ import com.sks.dto.NotificationRequest;
 import com.sks.service.NotificationService;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.kafka.annotation.KafkaListener;
+import org.springframework.kafka.annotation.TopicPartition;
 import org.springframework.stereotype.Component;
 
 @Component
@@ -19,6 +20,14 @@ public class NotificationConsumer {
         this.objectMapper = objectMapper;
     }
 
+    //This Listener consume only from partition 1.
+//    @KafkaListener(
+//            topicPartitions = @TopicPartition(
+//                    topic = "notifications",
+//                    partitions = {"1"}
+//            ),
+//            groupId = "alert-notification-group"
+//    )
     @KafkaListener(topics = "notifications", groupId = "alert-notification-group", containerFactory = "kafkaListenerContainerFactory")
     public void consume(String payload) {
         try {

@@ -3,6 +3,7 @@ package com.sks.kafka;
 import com.sks.dto.NotificationRequest;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.apache.kafka.clients.producer.ProducerRecord;
 import org.springframework.kafka.core.KafkaTemplate;
 import org.springframework.stereotype.Component;
 
@@ -17,6 +18,7 @@ public class NotificationProducer {
     public void publish(NotificationRequest request) {
         try {
             // fire-and-forget publish; KafkaTemplate returns a ListenableFuture but we avoid explicit callback types here
+            ProducerRecord<String,NotificationRequest > record = new ProducerRecord<>(TOPIC,"notification-msg-key",request);
             kafkaTemplate.send(TOPIC, request);
             log.debug("Published notification request to Kafka topic {}", TOPIC);
         } catch (Exception e) {
