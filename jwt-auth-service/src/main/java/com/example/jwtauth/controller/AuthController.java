@@ -39,6 +39,12 @@ public class AuthController {
     @Autowired
     private UserService userService;
 
+    @PostMapping("/register")
+    public ResponseEntity<?> register(@Valid @RequestBody RegisterRequest req) {
+        AppUser created = userService.register(req);
+        return ResponseEntity.ok(created);
+    }
+
     @PostMapping("/login")
     public ResponseEntity<?> login(@Valid @RequestBody AuthRequest request) {
         Authentication auth = authenticationManager.authenticate(
@@ -47,12 +53,6 @@ public class AuthController {
         User principal = (User) auth.getPrincipal();
         String token = jwtUtil.generateToken(principal.getUsername());
         return ResponseEntity.ok(new AuthResponse(token));
-    }
-
-    @PostMapping("/register")
-    public ResponseEntity<?> register(@Valid @RequestBody RegisterRequest req) {
-        AppUser created = userService.register(req);
-        return ResponseEntity.ok(created);
     }
 
     @GetMapping("/validate")
