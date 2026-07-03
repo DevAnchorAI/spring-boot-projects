@@ -18,7 +18,6 @@ public class EmployeeService {
     public Employee getEmployee(Long id) {
 
         System.out.println("Fetching from DB");
-
         return repository.findById(id)
                 .orElseThrow();
     }
@@ -26,7 +25,7 @@ public class EmployeeService {
     //Update Cache
     @CachePut(value = "employees", key = "#employee.id")
     public Employee update(Employee employee){
-
+        System.out.println("Update DB");
         return repository.save(employee);
 
     }
@@ -34,7 +33,7 @@ public class EmployeeService {
     //Delete Cache
     @CacheEvict(value = "employees", key = "#id")
     public void delete(Long id){
-
+        System.out.println("Delete from DB");
         repository.deleteById(id);
 
     }
