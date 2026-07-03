@@ -24,12 +24,18 @@ public class EmployeeController {
         ResponseVO response = new ResponseVO(emp);
        return response;
     }
-    @PostMapping("/saveOrUpdate")
+    @PostMapping("/update")
     public ResponseVO saveOrUpdate(@Valid @RequestBody Employee employee){
         log.info("EmployeeController:: saveOrUpdate:  {}",employee);
         Employee emp = employeeService.update(employee);
 
         ResponseVO response = new ResponseVO(emp);
         return response;
+    }
+
+    @DeleteMapping("/{id}")
+    public void  deleteEmployeeById(@PathVariable("id")Long id ){
+        log.info("EmployeeController:: deleteEmployeeById:  {}",id);
+        employeeService.delete(id);
     }
 }
