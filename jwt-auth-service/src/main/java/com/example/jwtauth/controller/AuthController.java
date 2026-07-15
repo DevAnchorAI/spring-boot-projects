@@ -52,7 +52,7 @@ public class AuthController {
         );
         User principal = (User) auth.getPrincipal();
         String token = jwtUtil.generateToken(principal.getUsername());
-        return ResponseEntity.ok(new AuthResponse(token));
+        return ResponseEntity.ok(new AuthResponse(token,"Login successful",true));
     }
 
     @GetMapping("/validate")
@@ -74,6 +74,14 @@ public class AuthController {
     @Data
     public static class AuthResponse {
         private String token;
-        public AuthResponse(String token) {this.token = token;}
+        private String message;
+        private boolean success;
+     //   public AuthResponse(String token) {this.token = token;}
+
+        public AuthResponse(String token, String message, boolean success) {
+            this.token = token;
+            this.message = message;
+            this.success = success;
+        }
     }
 }
