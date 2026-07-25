@@ -1,3 +1,5 @@
+#import configuration from cloud-config-server
+#Eureka Client configure in cloud-config-server
 spring:
   cloud:
     config:
