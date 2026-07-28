@@ -58,10 +58,137 @@ TaskController
 └── GET /api/v1/tasks/stats/queue
 
 ExecutionController
-├── GET /api/v1/executions/{taskId}
-├── GET /api/v1/executions
-└── GET /api/v1/executions/stats/all
+├── GET /api/v1/executions/{taskId}       Get execution result by task ID
+├── GET /api/v1/executions                Get all execution results
+└── GET /api/v1/executions/stats/all      Get execution statistics
 ```
+
+## Controllers - Detailed Implementation
+
+### ExecutionController
+
+**Location**: `src/main/java/com/agentic/system/controller/ExecutionController.java`
+
+Handles execution result monitoring and statistics. All endpoints return results wrapped in `ApiResponse<T>`.
+
+#### Endpoint 1: Get Execution Result by Task ID
+```java
+@GetMapping("/{taskId}")
+public ResponseEntity<ApiResponse<ExecutionResult>> getExecutionResult(@PathVariable String taskId)
+```
+
+- **HTTP Method**: GET
+- **Path**: `/api/v1/executions/{taskId}`
+- **Parameters**: taskId (path variable)
+- **Returns**: ExecutionResult or 404 if not found
+- **Status Codes**:
+  - `200 OK` - Result found
+  - `404 NOT_FOUND` - Result not found
+  - `500 INTERNAL_SERVER_ERROR` - Server error
+- **Example Request**:
+  ```bash
+  curl http://localhost:8080/api/v1/executions/task-123
+  ```
+- **Example Response**:
+  ```json
+  {
+    "success": true,
+    "message": "Execution result retrieved",
+    "data": {
+      "taskId": "task-123",
+      "agentId": "agent-456",
+      "success": true,
+      "result": {
+        "status": "analyzed",
+        "issues_found": 5
+      },
+      "executedAt": "2024-01-15T10:30:00",
+      "executionTimeMs": 1500
+    },
+    "timestamp": 1705318200000
+  }
+  ```
+
+#### Endpoint 2: Get All Execution Results
+```java
+@GetMapping
+public ResponseEntity<ApiResponse<List<ExecutionResult>>> getAllExecutionResults()
+```
+
+- **HTTP Method**: GET
+- **Path**: `/api/v1/executions`
+- **Parameters**: None
+- **Returns**: List of ExecutionResult objects
+- **Status Codes**:
+  - `200 OK` - Results retrieved
+  - `500 INTERNAL_SERVER_ERROR` - Server error
+- **Example Request**:
+  ```bash
+  curl http://localhost:8080/api/v1/executions
+  ```
+- **Example Response**:
+  ```json
+  {
+    "success": true,
+    "message": "Execution results retrieved",
+    "data": [
+      { "taskId": "task-1", "success": true, ... },
+      { "taskId": "task-2", "success": false, ... }
+    ],
+    "timestamp": 1705318200000
+  }
+  ```
+
+#### Endpoint 3: Get Execution Statistics
+```java
+@GetMapping("/stats/all")
+public ResponseEntity<ApiResponse<Map<String, Object>>> getExecutionStats()
+```
+
+- **HTTP Method**: GET
+- **Path**: `/api/v1/executions/stats/all`
+- **Parameters**: None
+- **Returns**: Map containing execution statistics
+- **Status Codes**:
+  - `200 OK` - Statistics retrieved
+  - `500 INTERNAL_SERVER_ERROR` - Server error
+- **Example Request**:
+  ```bash
+  curl http://localhost:8080/api/v1/executions/stats/all
+  ```
+- **Example Response**:
+  ```json
+  {
+    "success": true,
+    "message": "Execution statistics retrieved",
+    "data": {
+      "total_executions": 42,
+      "successful": 38,
+      "failed": 4
+    },
+    "timestamp": 1705318200000
+  }
+  ```
+
+#### Error Handling
+
+All endpoints include comprehensive error handling:
+
+```java
+try {
+    // Business logic
+} catch (Exception e) {
+    log.error("Error message", e);
+    return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+        .body(ApiResponse.failure("Error description", e.getMessage()));
+}
+```
+
+Common error scenarios:
+- **TaskId not found**: Returns 404 NOT_FOUND
+- **Invalid parameters**: Returns 400 BAD_REQUEST (validated by @Valid)
+- **Server errors**: Returns 500 INTERNAL_SERVER_ERROR with error message
+- **Null pointer exceptions**: Handled and logged
 
 ### Services (Business Logic Layer)
 
