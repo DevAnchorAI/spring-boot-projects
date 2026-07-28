@@ -47,9 +47,9 @@ public class ExecutionEngine {
     }
 
     /**
-     * Execute a task
+     * Execute a task asynchronously using asyncExecutor thread pool
      */
-    @Async
+    @Async("asyncExecutor")
     public void executeTask(Task task) {
         Agent agent = agentService.getAgent(task.getAgentId());
         if (agent == null) {
@@ -100,8 +100,8 @@ public class ExecutionEngine {
                 break;
 
             case PROCESSOR:
-                result.putResultEntry("records_processed",
-                    ((Map<String, Object>) task.getInput()).getOrDefault("batch_size", 100));
+                Object batchSizeObj = task.getInput().getOrDefault("batch_size", 100);
+                result.putResultEntry("records_processed", batchSizeObj);
                 result.putResultEntry("status", "processed");
                 result.setMessage("Data processing completed");
                 break;
@@ -135,6 +135,33 @@ public class ExecutionEngine {
         }
 
         return result;
+    }
+
+    /**
+     * Handle task failure with retry logic asynchronously
+     */
+    @Async("asyncExecutor")
+    public void handleTaskFailureAsync(Task task, String error) {
+        task.setError(error);
+        task.setRetryCount(task.getRetryCount() + 1);
+
+        if (task.getRetryCount() < task.getMaxRetries()) {
+            task.setStatus(TaskStatus.RETRY);
+            taskQueue.updateTaskStatus(task.getId(), TaskStatus.RETRY);
+
+            // Reschedule with delay
+            scheduler.schedule(() -> {
+                task.setStatus(TaskStatus.QUEUED);
+                taskQueue.submitTask(task);
+            }, 5, TimeUnit.SECONDS);
+
+            log.info("Task {} scheduled for retry ({}/{})",
+                task.getId(), task.getRetryCount(), task.getMaxRetries());
+        } else {
+            task.setStatus(TaskStatus.FAILED);
+            taskQueue.updateTaskStatus(task.getId(), TaskStatus.FAILED);
+            log.error("Task {} failed after {} retries", task.getId(), task.getMaxRetries());
+        }
     }
 
     /**
