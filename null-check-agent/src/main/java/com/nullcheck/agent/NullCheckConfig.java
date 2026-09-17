@@ -1,11 +1,15 @@
 package com.nullcheck.agent;
 
+import java.io.IOException;
+import java.nio.file.Files;
+import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.List;
 
 /**
  * Configuration class for NullCheckAgent
  * Can be configured in IntelliJ IDE and programmatically
+ * Skills are documented in skills.md file
  */
 public class NullCheckConfig {
 
@@ -99,6 +103,40 @@ public class NullCheckConfig {
 
     public void addSafeVariable(String variable) {
         this.safeVariables.add(variable);
+    }
+
+    /**
+     * Loads skills configuration from skills.md file
+     * @param skillsFilePath Path to the skills.md file
+     * @return String containing skills documentation
+     */
+    public String loadSkillsFromFile(String skillsFilePath) {
+        try {
+            return new String(Files.readAllBytes(Paths.get(skillsFilePath)));
+        } catch (IOException e) {
+            System.err.println("Error loading skills.md file: " + e.getMessage());
+            return "";
+        }
+    }
+
+    /**
+     * Gets the path to skills.md file relative to project root
+     * @return Path to skills.md
+     */
+    public String getSkillsFilePath() {
+        return "skills.md";
+    }
+
+    /**
+     * Prints all available skills from skills.md file
+     */
+    public void printAvailableSkills() {
+        String skillsPath = getSkillsFilePath();
+        String skillsContent = loadSkillsFromFile(skillsPath);
+        if (!skillsContent.isEmpty()) {
+            System.out.println("=== Null-Check-Agent Available Skills ===");
+            System.out.println(skillsContent);
+        }
     }
 
     @Override

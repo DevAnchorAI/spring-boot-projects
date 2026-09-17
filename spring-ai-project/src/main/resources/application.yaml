@@ -1,0 +1,10 @@
+spring:
+  application:
+    name: spring-ai-project
+  ai:
+    ollama:
+      base-url: http://localhost:11434
+      chat:
+        model: llama3.2
+#    openai:
+#      api-key: ollama

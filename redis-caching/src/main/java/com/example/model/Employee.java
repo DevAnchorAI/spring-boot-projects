@@ -19,6 +19,9 @@ public class Employee  implements Serializable {
 
     private String department;
 
+    @Version
+    private Long version;
+
     @Override
     public String toString() {
         return "Employee{" +
