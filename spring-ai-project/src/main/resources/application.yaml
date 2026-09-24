@@ -1,6 +1,10 @@
 spring:
   application:
     name: spring-ai-project
+  datasource:
+      url: jdbc:postgresql://localhost:5432/ai_db
+      username: postgres
+      password: postgres
   ai:
     ollama:
       base-url: http://localhost:11434
@@ -8,3 +12,7 @@ spring:
         model: llama3.2
 #    openai:
 #      api-key: ollama
+    vectorstore:
+      pgvector:
+        initialize-schema: true
+
