@@ -7,7 +7,7 @@ import com.spring.ai.service.ChatbotVectorService;
 import org.springframework.web.bind.annotation.*;
 
 @RestController
-@RequestMapping("/api/chat")
+@RequestMapping("/api")
 public class ChatController {
 
 //    private final ChatbotService chatbotService;
@@ -19,8 +19,13 @@ public class ChatController {
     public ChatController(ChatbotVectorService chatbotVectorService) {
         this.chatbotVectorService = chatbotVectorService;
     }
+    @GetMapping("/ask")
+    public String ask(@RequestParam String question) {
 
-    @PostMapping
+        return chatbotVectorService.ask(question);
+    }
+
+    @PostMapping("/chat")
     public DocumentQAResponse chat(@RequestBody String message, @RequestParam(required = false)
     String documentType) {
         //return chatbotService.chat(message);
@@ -32,5 +37,9 @@ public class ChatController {
         return chatbotVectorService.chat(documentQARequest.question(),documentQARequest.documentType());
     }
 
+    @PostMapping("/askTools")
+    public String chatTools(@RequestBody String message) {
+        return chatbotVectorService.chatTools(message);
+    }
 
 }
