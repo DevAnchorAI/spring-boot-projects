@@ -1,9 +1,8 @@
 package com.spring.ai.service;
 
+import com.spring.ai.dto.DocumentQAResponse;
 import org.springframework.ai.chat.client.ChatClient;
 import org.springframework.ai.document.Document;
-import org.springframework.ai.vectorstore.SearchRequest;
-import org.springframework.ai.vectorstore.VectorStore;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
@@ -23,7 +22,7 @@ public class ChatbotVectorService {
         this.knowledgeService = knowledgeService;
     }
 
-    public String chat(String question) {
+    public DocumentQAResponse chat(String question) {
 
         // 1. Search Vector DB
         //Retrieve relevant chunks
@@ -37,7 +36,7 @@ public class ChatbotVectorService {
 
 
         // 3. Send context + question to LLM
-        return chatClient
+       String answer =  chatClient
                 .prompt()
                 .system("""
                         You are a banking AI assistant.
@@ -56,5 +55,21 @@ public class ChatbotVectorService {
                 .user(question)
                 .call()
                 .content();
+
+       //now add source of truth in response
+        List<String> sources = documents.stream()
+                .map(document ->
+                        String.valueOf(
+                                document.getMetadata()
+                                        .get("fileName")
+                        )
+                )
+                .distinct()
+                .toList();
+
+        return new DocumentQAResponse(
+                answer,
+                sources
+        );
     }
 }
