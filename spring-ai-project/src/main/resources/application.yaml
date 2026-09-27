@@ -5,14 +5,17 @@ spring:
       url: jdbc:postgresql://localhost:5432/ai_db
       username: postgres
       password: postgres
+  jpa:
+    properties:
+      hibernate:
+        default_schema: public
   ai:
     ollama:
       base-url: http://localhost:11434
       chat:
         model: llama3.2
-#    openai:
-#      api-key: ollama
+      embedding:
+        model: mxbai-embed-large
     vectorstore:
       pgvector:
         initialize-schema: true
-

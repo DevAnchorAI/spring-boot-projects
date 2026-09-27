@@ -1,10 +1,10 @@
 package com.spring.ai.controller;
 
 import com.spring.ai.service.DocumentService;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
+import org.springframework.web.multipart.MultipartFile;
+
+import java.io.IOException;
 
 @RestController
 @RequestMapping("/documents")
@@ -22,5 +22,14 @@ public class DocumentController {
         documentService.addBankingPolicy(text);
 
         return "Document stored successfully";
+    }
+    @PostMapping("/upload")
+    public String upload(
+            @RequestParam("file") MultipartFile file)
+            throws IOException {
+
+        documentService.processDocument(file);
+
+        return "Document uploaded and indexed successfully";
     }
 }

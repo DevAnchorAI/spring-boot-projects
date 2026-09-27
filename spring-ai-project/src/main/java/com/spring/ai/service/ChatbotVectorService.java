@@ -26,13 +26,15 @@ public class ChatbotVectorService {
     public String chat(String question) {
 
         // 1. Search Vector DB
+        //Retrieve relevant chunks
         List<Document> documents =
-                knowledgeService.search(question, 3);
+                knowledgeService.search(question, 4);
 
         // 2. Build context
         String context = documents.stream()
                 .map(Document::getText)
                 .collect(Collectors.joining("\n\n"));
+
 
         // 3. Send context + question to LLM
         return chatClient
@@ -46,6 +48,8 @@ public class ChatbotVectorService {
                         If the answer is not available in the
                         context, say:
                         "I don't have enough information."
+
+                        Do not make up information.
 
                         Context:
                         """ + context)

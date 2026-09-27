@@ -1,0 +1,71 @@
+CUSTOMER FAQ
+Sample Banking FAQ for RAG / Semantic Search Testing
+
+NOTE:
+This is a fictional FAQ created for software development and RAG demonstrations.
+
+
+Q1. What is the standard daily transaction limit?
+
+A1. The standard maximum daily transaction limit for an eligible retail customer is INR 100,000.
+
+
+Q2. What is the international transaction limit?
+
+A2. The sample international transaction daily limit is INR 500,000.
+
+
+Q3. When does an international transaction require additional authorization?
+
+A3. An international transaction above INR 250,000 requires additional authorization in the sample transaction policy.
+
+
+Q4. What is the minimum monthly income for a personal loan?
+
+A4. The sample Loan Policy specifies a minimum monthly income of INR 30,000.
+
+
+Q5. What is the personal loan amount range?
+
+A5. The sample personal loan amount ranges from INR 50,000 to INR 2,000,000, subject to eligibility and approval.
+
+
+Q6. What is the sample personal loan interest rate?
+
+A6. The sample Loan Policy uses an interest rate of 10.5% per annum for RAG testing.
+
+
+Q7. What documents are required to open a savings account?
+
+A7. Customers need valid identity proof, address proof, and other documents required during the verification process.
+
+
+Q8. What is the minimum monthly balance for the sample savings account?
+
+A8. The sample Account Opening Policy specifies a minimum monthly balance of INR 5,000.
+
+
+Q9. What account types are supported in the sample policy?
+
+A9. The sample account types are Savings Account, Current Account, Salary Account, and Basic Digital Account.
+
+
+Q10. What transaction statuses are supported?
+
+A10. Supported sample transaction statuses are INITIATED, PENDING, AUTHORIZED, COMPLETED, FAILED, REJECTED, and REVERSED.
+
+
+Q11. Can a failed transaction be considered completed?
+
+A11. No. A failed transaction must not be considered successfully completed.
+
+
+Q12. What should a customer provide when contacting support about a transaction?
+
+A12. The customer should provide the transaction reference number.
+
+
+DISCLAIMER:
+
+This FAQ is fictional and intended only for software development,
+RAG, vector database, and semantic-search demonstrations.
