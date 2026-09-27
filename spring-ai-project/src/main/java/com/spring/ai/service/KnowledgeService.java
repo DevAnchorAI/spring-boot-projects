@@ -45,13 +45,20 @@ public class KnowledgeService {
     }
 
 
-    public List<Document> search(String query, int topK) {
+    public List<Document> search(String query, int topK,String documentType) {
 
-        return vectorStore.similaritySearch(
-                SearchRequest.builder()
-                        .query(query)
-                        .topK(topK)
-                        .build()
-        );
+//        return vectorStore.similaritySearch(
+//                SearchRequest.builder()
+//                        .query(query)
+//                        .topK(topK)
+//                        .build()
+//        );
+
+        SearchRequest.Builder requestBuilder = SearchRequest.builder().query(query).topK(topK);
+        System.out.println("documentType>> "+ documentType);
+        if(null != documentType && !documentType.isBlank()){
+            requestBuilder.filterExpression("documentType == '"+documentType+"'");
+        }
+        return vectorStore.similaritySearch(requestBuilder.build());
     }
 }

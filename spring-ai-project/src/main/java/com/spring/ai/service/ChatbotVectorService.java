@@ -22,12 +22,12 @@ public class ChatbotVectorService {
         this.knowledgeService = knowledgeService;
     }
 
-    public DocumentQAResponse chat(String question) {
+    public DocumentQAResponse chat(String question,String documentType) {
 
         // 1. Search Vector DB
         //Retrieve relevant chunks
         List<Document> documents =
-                knowledgeService.search(question, 4);
+                knowledgeService.search(question, 4,documentType);
 
         // 2. Build context
         String context = documents.stream()
