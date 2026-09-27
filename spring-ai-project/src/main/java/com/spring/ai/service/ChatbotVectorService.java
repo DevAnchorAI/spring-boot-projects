@@ -75,15 +75,6 @@ public class ChatbotVectorService {
         );
     }
 
-    public String chatTools(String question) {
-
-        return chatClient
-                .prompt()
-                .user(question)
-                .tools(bankingTools)
-                .call()
-                .content();
-    }
 
     public String ask(String question) {
 
@@ -97,6 +88,28 @@ public class ChatbotVectorService {
                     If you don't know the answer, say you don't know.
                     """)
                 .user(question)
+                .call()
+                .content();
+    }
+
+    public String askTools(String question) {
+
+        return chatClient
+                .prompt()
+                .system("""
+                        You are a banking assistant.
+
+                        You can use banking tools when
+                        real-time banking information is required.
+
+                        Never invent transaction status,
+                        account balance, or transaction details.
+
+                        Use the appropriate tool when
+                        the user asks for real-time banking data.
+                        """)
+                .user(question)
+                .tools(bankingTools)
                 .call()
                 .content();
     }

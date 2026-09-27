@@ -38,8 +38,8 @@ public class ChatController {
     }
 
     @PostMapping("/askTools")
-    public String chatTools(@RequestBody String message) {
-        return chatbotVectorService.chatTools(message);
+    public String askTools(@RequestBody String message) {
+        return chatbotVectorService.askTools(message);
     }
 
 }
