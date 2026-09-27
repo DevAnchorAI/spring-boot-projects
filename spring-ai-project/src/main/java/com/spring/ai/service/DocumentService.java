@@ -47,39 +47,38 @@ public class DocumentService {
             Map<String, Object> metadata =new HashMap<>();
             metadata.put("fileName",file.getOriginalFilename());
             metadata.put("category","BANKING");
-            metadata.put("documentType",determineDocumentType(file));
+            metadata.put("source", "INTERNAL_KNOWLEDGE_BASE");
+            metadata.put("documentType",determineDocumentType(file.getOriginalFilename()));
             knowledgeService.storeDocuments(documents,metadata);
         } finally {
 
             Files.deleteIfExists(tempFile);
         }
     }
-    private String determineDocumentType(
-            MultipartFile file) {
+    private String determineDocumentType(String fileName) {
 
-        String fileName =
-                file.getOriginalFilename();
-
-        if (fileName == null) {
+        if (fileName == null || fileName.isBlank()) {
             return "UNKNOWN";
         }
 
-        if (fileName.endsWith(".pdf")) {
-            return "PDF";
+        String name = fileName.toLowerCase();
+
+        if (name.contains("transactionpolicy")) {
+            return "TRANSACTION_POLICY";
         }
 
-        if (fileName.endsWith(".docx")) {
-            return "DOCX";
+        if (name.contains("loanpolicy")) {
+            return "LOAN_POLICY";
         }
 
-        if (fileName.endsWith(".html")) {
-            return "HTML";
+        if (name.contains("accountopening")) {
+            return "ACCOUNT_OPENING";
         }
 
-        if (fileName.endsWith(".txt")) {
-            return "TEXT";
+        if (name.contains("customerfaq")) {
+            return "CUSTOMER_FAQ";
         }
 
-        return "UNKNOWN";
+        return "GENERAL";
     }
 }
