@@ -2,6 +2,7 @@ package com.spring.ai.service;
 
 import com.spring.ai.dto.DocumentQAResponse;
 import com.spring.ai.tools.BankingTools;
+import com.spring.ai.tools.RagTools;
 import org.springframework.ai.chat.client.ChatClient;
 import org.springframework.ai.document.Document;
 import org.springframework.stereotype.Service;
@@ -15,13 +16,15 @@ public class ChatbotVectorService {
     private final ChatClient chatClient;
     private final KnowledgeService knowledgeService;
     private final BankingTools bankingTools;
+    private final RagTools ragTools;
     public ChatbotVectorService(
             ChatClient.Builder builder,
-            KnowledgeService knowledgeService, BankingTools bankingTools) {
+            KnowledgeService knowledgeService, BankingTools bankingTools, RagTools ragTools) {
 
         this.chatClient = builder.build();
         this.knowledgeService = knowledgeService;
         this.bankingTools = bankingTools;
+        this.ragTools = ragTools;
     }
 
     public DocumentQAResponse chat(String question,String documentType) {
@@ -92,7 +95,7 @@ public class ChatbotVectorService {
                 .content();
     }
 
-    public String askTools(String question) {
+    public String askBankingTools(String question) {
 
         return chatClient
                 .prompt()
@@ -110,6 +113,45 @@ public class ChatbotVectorService {
                         """)
                 .user(question)
                 .tools(bankingTools)
+                .call()
+                .content();
+    }
+
+    public String askRagAndBankingTools(String question) {
+
+        return chatClient
+                .prompt()
+                .system("""
+                        You are an intelligent banking assistant.
+
+                        You have access to two types of capabilities:
+
+                        1. Knowledge Base:
+                           Use searchDocuments when the user asks
+                           about banking policies, loan policies,
+                           account opening, FAQs, transaction limits,
+                           or other information contained in documents.
+
+                        2. Banking Tools:
+                           Use banking tools when the user asks for
+                           real-time transaction or account information.
+
+                        Never invent banking information.
+
+                        If the information is available through a
+                        tool, use the tool instead of guessing.
+
+                        If the user asks a question requiring both
+                        policy information and real-time information,
+                        use both capabilities.
+
+                        Give a concise and accurate final answer.
+                        """)
+                .user(question)
+                .tools(
+                        ragTools,
+                        bankingTools
+                )
                 .call()
                 .content();
     }

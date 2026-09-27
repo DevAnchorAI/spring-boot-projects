@@ -37,9 +37,14 @@ public class ChatController {
         return chatbotVectorService.chat(documentQARequest.question(),documentQARequest.documentType());
     }
 
-    @PostMapping("/askTools")
+    @PostMapping("/askBankingTools")
     public String askTools(@RequestBody String message) {
-        return chatbotVectorService.askTools(message);
+        return chatbotVectorService.askBankingTools(message);
+    }
+
+    @PostMapping("/askRagAndBankingTools")
+    public String askRagAndBankingTools(@RequestBody String message) {
+        return chatbotVectorService.askRagAndBankingTools(message);
     }
 
 }
