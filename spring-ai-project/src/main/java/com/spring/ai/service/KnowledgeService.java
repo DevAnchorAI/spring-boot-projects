@@ -7,12 +7,19 @@ import org.springframework.ai.vectorstore.VectorStore;
 import org.springframework.stereotype.Service;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 
 @Service
 public class KnowledgeService {
 
     private final VectorStore vectorStore;
-
+    private static final Set<String> SUPPORTED_DOCUMENT_TYPES =
+            Set.of(
+                    "TRANSACTION_POLICY",
+                    "LOAN_POLICY",
+                    "ACCOUNT_OPENING",
+                    "CUSTOMER_FAQ"
+            );
     public KnowledgeService(VectorStore vectorStore) {
         this.vectorStore = vectorStore;
     }
@@ -56,6 +63,10 @@ public class KnowledgeService {
 
         SearchRequest.Builder requestBuilder = SearchRequest.builder().query(query).topK(topK);
         System.out.println("documentType>> "+ documentType);
+        if (documentType != null && !SUPPORTED_DOCUMENT_TYPES.contains(documentType)) {
+
+            throw new IllegalArgumentException("Unsupported document type: " + documentType);
+        }
         if(null != documentType && !documentType.isBlank()){
             requestBuilder.filterExpression("documentType == '"+documentType+"'");
         }

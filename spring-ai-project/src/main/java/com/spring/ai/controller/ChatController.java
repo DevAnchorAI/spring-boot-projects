@@ -1,6 +1,7 @@
 package com.spring.ai.controller;
 
 //import com.spring.ai.test.ChatbotService;
+import com.spring.ai.dto.DocumentQARequest;
 import com.spring.ai.dto.DocumentQAResponse;
 import com.spring.ai.service.ChatbotVectorService;
 import org.springframework.web.bind.annotation.*;
@@ -25,5 +26,11 @@ public class ChatController {
         //return chatbotService.chat(message);
         return chatbotVectorService.chat(message,documentType);
     }
+
+    @PostMapping("/askQuestion")
+    public DocumentQAResponse askQuestion(@RequestBody  DocumentQARequest documentQARequest){
+        return chatbotVectorService.chat(documentQARequest.question(),documentQARequest.documentType());
+    }
+
 
 }
