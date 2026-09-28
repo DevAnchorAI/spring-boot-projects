@@ -62,7 +62,7 @@ public class KnowledgeService {
 //        );
 
         SearchRequest.Builder requestBuilder = SearchRequest.builder().query(query).topK(topK);
-        System.out.println("documentType>> "+ documentType);
+        System.out.println("documentType:[ "+ documentType+"]");
         if (documentType != null && !SUPPORTED_DOCUMENT_TYPES.contains(documentType)) {
 
             throw new IllegalArgumentException("Unsupported document type: " + documentType);

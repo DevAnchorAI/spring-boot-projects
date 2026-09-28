@@ -19,3 +19,9 @@ spring:
     vectorstore:
       pgvector:
         initialize-schema: true
+#implement PostgreSQL persistent Chat Memory
+    chat:
+      memory:
+        repository:
+          jdbc:
+            initialize-schema: always
