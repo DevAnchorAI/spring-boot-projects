@@ -48,7 +48,7 @@ public class ChatbotService {
     }
 
 
-    public DocumentQAResponse chat(String question,String documentType) {
+    public DocumentQAResponse ask(String question,String documentType) {
         // 1. Generate embedding for user message
 //        float[] embedding = generateEmbedding(question);
 //        System.out.println("Embedding generated."+ Arrays.toString(embedding));
@@ -103,71 +103,11 @@ public class ChatbotService {
         );
     }
 
-    public String askBankingTools(String question) {
-
-        return chatClient
-                .prompt()
-                .system("""
-                        You are a banking assistant.
-
-                        You can use banking tools when
-                        real-time banking information is required.
-
-                        Never invent transaction status,
-                        account balance, or transaction details.
-
-                        Use the appropriate tool when
-                        the user asks for real-time banking data.
-                        """)
-                .user(question)
-                .tools(bankingTools)
-                .call()
-                .content();
-    }
-
-    public String askRagAndBankingTools(String question) {
-
-        return chatClient
-                .prompt()
-                .system("""
-                        You are an intelligent banking assistant.
-
-                        You have access to two types of capabilities:
-
-                        1. Knowledge Base:
-                           Use searchDocuments when the user asks
-                           about banking policies, loan policies,
-                           account opening, FAQs, transaction limits,
-                           or other information contained in documents.
-
-                        2. Banking Tools:
-                           Use banking tools when the user asks for
-                           real-time transaction or account information.
-
-                        Never invent banking information.
-
-                        If the information is available through a
-                        tool, use the tool instead of guessing.
-
-                        If the user asks a question requiring both
-                        policy information and real-time information,
-                        use both capabilities.
-
-                        Give a concise and accurate final answer.
-                        """)
-                .user(question)
-                .tools(
-                        ragTools,
-                        bankingTools
-                )
-                .call()
-                .content();
-    }
 
     public String chatConversation(
             String conversationId,
             String question) {
-        System.out.println("conversationId>>"+conversationId);
+        System.out.println("conversationId: ["+conversationId+"]");
         return chatClient
                 .prompt()
                 .system("""

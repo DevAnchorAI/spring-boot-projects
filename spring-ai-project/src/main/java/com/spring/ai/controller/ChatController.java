@@ -15,23 +15,13 @@ public class ChatController {
         this.chatbotService = chatbotService;
     }
 
-    @PostMapping("/chat")
+    @PostMapping("/ask")
     public DocumentQAResponse chat(@RequestBody String message, @RequestParam(required = false)
     String documentType) {
-        return chatbotService.chat(message,documentType);
+        return chatbotService.ask(message,documentType);
     }
 
-    @PostMapping("/askBankingTools")
-    public String askTools(@RequestBody String message) {
-        return chatbotService.askBankingTools(message);
-    }
-
-    @PostMapping("/askRagAndBankingTools")
-    public String askRagAndBankingTools(@RequestBody String message) {
-        return chatbotService.askRagAndBankingTools(message);
-    }
-
-    @PostMapping("/chatConversation")
+    @PostMapping("/chat")
     public String chatConversation(
             @RequestBody ChatRequest request) {
 
