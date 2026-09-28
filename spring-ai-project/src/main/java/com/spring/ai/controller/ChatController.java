@@ -1,9 +1,8 @@
 package com.spring.ai.controller;
 
-import com.spring.ai.dto.ChatRequest;
-import com.spring.ai.dto.DocumentQARequest;
-import com.spring.ai.dto.DocumentQAResponse;
+import com.spring.ai.dto.*;
 import com.spring.ai.service.ChatbotService;
+import org.apache.poi.ss.formula.functions.T;
 import org.springframework.web.bind.annotation.*;
 
 @RestController
@@ -22,7 +21,7 @@ public class ChatController {
     }
 
     @PostMapping("/chat")
-    public String chatConversation(
+    public BankingAssistantResponse chatConversation(
             @RequestBody ChatRequest request) {
 
         return chatbotService.chatConversation(request.conversationId(), request.question());

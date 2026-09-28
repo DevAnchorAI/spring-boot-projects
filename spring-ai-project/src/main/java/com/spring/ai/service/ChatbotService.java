@@ -1,11 +1,14 @@
 package com.spring.ai.service;
 
+import com.spring.ai.dto.BankingAssistantResponse;
 import com.spring.ai.dto.DocumentQAResponse;
 import com.spring.ai.tools.BankingTools;
 import com.spring.ai.tools.RagTools;
+import org.apache.poi.ss.formula.functions.T;
 import org.springframework.ai.chat.client.ChatClient;
 import org.springframework.ai.chat.client.advisor.MessageChatMemoryAdvisor;
 import org.springframework.ai.chat.memory.ChatMemory;
+import org.springframework.ai.converter.BeanOutputConverter;
 import org.springframework.ai.document.Document;
 import org.springframework.ai.embedding.EmbeddingModel;
 import org.springframework.stereotype.Service;
@@ -21,7 +24,6 @@ public class ChatbotService {
     private final BankingTools bankingTools;
     private final RagTools ragTools;
     private final EmbeddingModel embeddingModel;
-
 
     public ChatbotService(
             ChatClient.Builder chatClientBuilder,
@@ -44,7 +46,6 @@ public class ChatbotService {
                         .defaultAdvisors(memoryAdvisor)
                         .build();
     }
-
 
     public DocumentQAResponse ask(String question,String documentType) {
         // 1. Generate embedding for user message
@@ -101,43 +102,81 @@ public class ChatbotService {
         );
     }
 
-
-    public String chatConversation(
+    BeanOutputConverter<BankingAssistantResponse> converter =
+            new BeanOutputConverter<>(
+                    BankingAssistantResponse.class
+            );
+    public BankingAssistantResponse chatConversation(
             String conversationId,
             String question) {
         System.out.println("conversationId: ["+conversationId+"]");
+        BeanOutputConverter<BankingAssistantResponse> converter =
+                new BeanOutputConverter<>(
+                        BankingAssistantResponse.class
+                );
+
         return chatClient
                 .prompt()
                 .system("""
-                        You are an intelligent banking assistant.
+                    You are an intelligent banking assistant.
 
-                        You have access to two types of capabilities.
+                    You have access to banking tools.
 
-                        1. Knowledge Base:
-                           Use searchDocuments when the user asks
-                           about banking policies, loan policies,
-                           account opening, FAQs, transaction limits,
-                           or other information contained in documents.
+                    Available banking operations:
 
-                        2. Banking Tools:
-                           Use banking tools when the user asks for
-                           real-time transaction or account information.
+                    1. TRANSACTION_STATUS
+                       Use getTransactionStatus when the user asks
+                       about a transaction.
 
-                        Use conversation history when the user's
-                        current question refers to something discussed
-                        earlier.
+                    2. ACCOUNT_BALANCE
+                       Use getAccountBalance when the user asks
+                       about an account balance.
 
-                        Never invent banking information.
+                    3. RECENT_TRANSACTIONS
+                       Use getRecentTransactions when the user asks
+                       about recent transactions.
 
-                        If information is available through a tool,
-                        use the appropriate tool instead of guessing.
-                        """)
-                .user(question)
+                    Always use the appropriate banking tool when
+                    real-time banking information is required.
+
+                    Never invent banking information.
+
+                    After calling the tool, create the final response
+                    using exactly these four fields:
+
+                    intent:
+                    The appropriate BankingIntent value.
+
+                    success:
+                    true when the requested banking information was
+                    successfully retrieved from the tool.
+                    false when the operation fails.
+
+                    message:
+                    A short human-readable explanation.
+
+                    data:
+                    The actual data returned by the banking tool.
+
+                    IMPORTANT:
+                    Never omit the success field.
+                    Never set success to null.
+                    """)
+                .user(user -> user
+                        .text("""
+                            User question:
+
+                            {question}
+
+                            {format}
+                            """)
+                        .param("question", question)
+                        .param("format", converter.getFormat())
+                )
                 .tools(
                         ragTools,
                         bankingTools
                 )
-                //now add the advisor to keep the conversation history
                 .advisors(
                         advisor -> advisor.param(
                                 ChatMemory.CONVERSATION_ID,
@@ -145,7 +184,8 @@ public class ChatbotService {
                         )
                 )
                 .call()
-                .content();
+                .entity(converter);//to get Structured response
+                //.content();
     }
 
     public float[] generateEmbedding(String text) {
