@@ -4,30 +4,55 @@ import com.spring.ai.dto.DocumentQAResponse;
 import com.spring.ai.tools.BankingTools;
 import com.spring.ai.tools.RagTools;
 import org.springframework.ai.chat.client.ChatClient;
+import org.springframework.ai.chat.client.advisor.MessageChatMemoryAdvisor;
+import org.springframework.ai.chat.memory.ChatMemory;
 import org.springframework.ai.document.Document;
+import org.springframework.ai.embedding.EmbeddingModel;
 import org.springframework.stereotype.Service;
 
+import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 import java.util.stream.Collectors;
 
 @Service
-public class ChatbotVectorService {
+public class ChatbotService {
 
     private final ChatClient chatClient;
     private final KnowledgeService knowledgeService;
     private final BankingTools bankingTools;
     private final RagTools ragTools;
-    public ChatbotVectorService(
-            ChatClient.Builder builder,
-            KnowledgeService knowledgeService, BankingTools bankingTools, RagTools ragTools) {
+    private final EmbeddingModel embeddingModel;
 
-        this.chatClient = builder.build();
+
+    public ChatbotService(
+            ChatClient.Builder chatClientBuilder,
+            KnowledgeService knowledgeService,
+            RagTools ragTools,
+            BankingTools bankingTools,
+            ChatMemory chatMemory, EmbeddingModel embeddingModel) {
         this.knowledgeService = knowledgeService;
-        this.bankingTools = bankingTools;
         this.ragTools = ragTools;
+        this.bankingTools = bankingTools;
+        this.embeddingModel = embeddingModel;
+
+
+        MessageChatMemoryAdvisor memoryAdvisor =
+                MessageChatMemoryAdvisor.builder(chatMemory)
+                        .build();
+
+        this.chatClient =
+                chatClientBuilder
+                        .defaultAdvisors(memoryAdvisor)
+                        .build();
     }
 
+
     public DocumentQAResponse chat(String question,String documentType) {
+        // 1. Generate embedding for user message
+//        float[] embedding = generateEmbedding(question);
+//        System.out.println("Embedding generated."+ Arrays.toString(embedding));
+//        System.out.println("Vector size: " + embedding.length);
 
         // 1. Search Vector DB
         //Retrieve relevant chunks
@@ -76,23 +101,6 @@ public class ChatbotVectorService {
                 answer,
                 sources
         );
-    }
-
-
-    public String ask(String question) {
-
-        return chatClient
-                .prompt()
-                .system("""
-                    You are a professional banking customer support assistant.
-
-                    Answer clearly and concisely.
-                    Never invent customer account information.
-                    If you don't know the answer, say you don't know.
-                    """)
-                .user(question)
-                .call()
-                .content();
     }
 
     public String askBankingTools(String question) {
@@ -154,5 +162,57 @@ public class ChatbotVectorService {
                 )
                 .call()
                 .content();
+    }
+
+    public String chatConversation(
+            String conversationId,
+            String question) {
+        System.out.println("conversationId>>"+conversationId);
+        return chatClient
+                .prompt()
+                .system("""
+                        You are an intelligent banking assistant.
+
+                        You have access to two types of capabilities.
+
+                        1. Knowledge Base:
+                           Use searchDocuments when the user asks
+                           about banking policies, loan policies,
+                           account opening, FAQs, transaction limits,
+                           or other information contained in documents.
+
+                        2. Banking Tools:
+                           Use banking tools when the user asks for
+                           real-time transaction or account information.
+
+                        Use conversation history when the user's
+                        current question refers to something discussed
+                        earlier.
+
+                        Never invent banking information.
+
+                        If information is available through a tool,
+                        use the appropriate tool instead of guessing.
+                        """)
+                .user(question)
+                .tools(
+                        ragTools,
+                        bankingTools
+                )
+                //now add the advisor to keep the conversation history
+                .advisors(
+                        advisor -> advisor.param(
+                                ChatMemory.CONVERSATION_ID,
+                                conversationId
+                        )
+                )
+                .call()
+                .content();
+    }
+
+    public float[] generateEmbedding(String text) {
+
+        return embeddingModel
+                .embed(text);
     }
 }
