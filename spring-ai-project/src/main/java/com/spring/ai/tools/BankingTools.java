@@ -15,6 +15,11 @@ public class BankingTools {
     public Transaction getTransactionStatus(String transactionId) {
         System.out.println("Tool called: getTransactionStatus()");
 
+        if (!isValidTransactionId(transactionId)) {
+            throw new IllegalArgumentException(
+                    "Invalid transaction ID"
+            );
+        }
         if ("TXN1001".equals(transactionId)) {
             return new Transaction(transactionId,"COMPLETED",new BigDecimal("25000"),"DOMESTIC_TRANSFER");
         }
@@ -37,6 +42,11 @@ public class BankingTools {
     public AccountBalanceData getAccountBalance(String accountNumber) {
 
         System.out.println("Tool called: getAccountBalance()");
+        if (!isValidAccount(accountNumber)) {
+            throw new IllegalArgumentException(
+                    "Invalid account number"
+            );
+        }
 
         if ("ACC1001".equalsIgnoreCase(accountNumber)) {
 
@@ -59,6 +69,19 @@ public class BankingTools {
         return List.of(new RecentTransactionData("TXN1001", "DOMESTIC_TRANSFER", new BigDecimal("25000"), "COMPLETED"),
                 new RecentTransactionData("TXN1002", "DOMESTIC_TRANSFER", new BigDecimal("50000"), "PENDING"),
                 new RecentTransactionData("TXN1003", "BILL_PAYMENT", new BigDecimal("15000"), "FAILED"));
+    }
+
+    private boolean isValidTransactionId(String transactionId) {
+
+        return transactionId != null && transactionId.matches(
+                "^TXN[0-9]{4,20}$"
+        );
+    }
+    private boolean isValidAccount(String accountNumber) {
+
+        return accountNumber != null && accountNumber.matches(
+                "^ACC[0-9]{4,20}$"
+        );
     }
 
 }

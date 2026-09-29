@@ -21,6 +21,7 @@ import java.util.stream.Collectors;
 public class ChatbotService {
 
     private final ChatClient chatClient;
+    private final ChatClient securityChatClient;
     private final KnowledgeService knowledgeService;
     private final BankingTools bankingTools;
     private final RagTools ragTools;
@@ -44,10 +45,10 @@ public class ChatbotService {
                 MessageChatMemoryAdvisor.builder(chatMemory)
                         .build();
 
-        this.chatClient =
-                chatClientBuilder
-                        .defaultAdvisors(memoryAdvisor)
-                        .build();
+        this.chatClient = chatClientBuilder.defaultAdvisors(memoryAdvisor).build();
+
+      //Use a separate, minimal ChatClient: to avoid security attack through the same contextual state.
+        this.securityChatClient =   chatClientBuilder.build();
     }
 
     public DocumentQAResponse ask(String question,String documentType) {
