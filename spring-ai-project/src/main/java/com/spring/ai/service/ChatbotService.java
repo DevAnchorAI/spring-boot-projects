@@ -2,6 +2,7 @@ package com.spring.ai.service;
 
 import com.spring.ai.dto.BankingAssistantResponse;
 import com.spring.ai.dto.DocumentQAResponse;
+import com.spring.ai.guardrail.PromptInjectionGuard;
 import com.spring.ai.tools.BankingTools;
 import com.spring.ai.tools.RagTools;
 import org.apache.poi.ss.formula.functions.T;
@@ -24,17 +25,19 @@ public class ChatbotService {
     private final BankingTools bankingTools;
     private final RagTools ragTools;
     private final EmbeddingModel embeddingModel;
+    private  final PromptInjectionGuard promptInjectionGuard;
 
     public ChatbotService(
             ChatClient.Builder chatClientBuilder,
             KnowledgeService knowledgeService,
             RagTools ragTools,
             BankingTools bankingTools,
-            ChatMemory chatMemory, EmbeddingModel embeddingModel) {
+            ChatMemory chatMemory, EmbeddingModel embeddingModel, PromptInjectionGuard promptInjectionGuard) {
         this.knowledgeService = knowledgeService;
         this.ragTools = ragTools;
         this.bankingTools = bankingTools;
         this.embeddingModel = embeddingModel;
+        this.promptInjectionGuard = promptInjectionGuard;
 
 
         MessageChatMemoryAdvisor memoryAdvisor =
@@ -115,77 +118,82 @@ public class ChatbotService {
                         BankingAssistantResponse.class
                 );
 
-        return chatClient
-                .prompt()
-                .system("""
-                    You are an intelligent banking assistant.
+        String validationResult = promptInjectionGuard.validate(question);
+        if(null != validationResult) {
+            return new BankingAssistantResponse(null,false,validationResult,null);
+        }
+            return chatClient
+                    .prompt()
+                    .system("""
+                            You are an intelligent banking assistant.
 
-                    You have access to banking tools.
+                            You have access to banking tools.
 
-                    Available banking operations:
+                            Available banking operations:
 
-                    1. TRANSACTION_STATUS
-                       Use getTransactionStatus when the user asks
-                       about a transaction.
+                            1. TRANSACTION_STATUS
+                               Use getTransactionStatus when the user asks
+                               about a transaction.
 
-                    2. ACCOUNT_BALANCE
-                       Use getAccountBalance when the user asks
-                       about an account balance.
+                            2. ACCOUNT_BALANCE
+                               Use getAccountBalance when the user asks
+                               about an account balance.
 
-                    3. RECENT_TRANSACTIONS
-                       Use getRecentTransactions when the user asks
-                       about recent transactions.
+                            3. RECENT_TRANSACTIONS
+                               Use getRecentTransactions when the user asks
+                               about recent transactions.
 
-                    Always use the appropriate banking tool when
-                    real-time banking information is required.
+                            Always use the appropriate banking tool when
+                            real-time banking information is required.
 
-                    Never invent banking information.
+                            Never invent banking information.
 
-                    After calling the tool, create the final response
-                    using exactly these four fields:
+                            After calling the tool, create the final response
+                            using exactly these four fields:
 
-                    intent:
-                    The appropriate BankingIntent value.
+                            intent:
+                            The appropriate BankingIntent value.
 
-                    success:
-                    true when the requested banking information was
-                    successfully retrieved from the tool.
-                    false when the operation fails.
+                            success:
+                            true when the requested banking information was
+                            successfully retrieved from the tool.
+                            false when the operation fails.
 
-                    message:
-                    A short human-readable explanation.
+                            message:
+                            A short human-readable explanation.
 
-                    data:
-                    The actual data returned by the banking tool.
+                            data:
+                            The actual data returned by the banking tool.
 
-                    IMPORTANT:
-                    Never omit the success field.
-                    Never set success to null.
-                    """)
-                .user(user -> user
-                        .text("""
-                            User question:
-
-                            {question}
-
-                            {format}
+                            IMPORTANT:
+                            Never omit the success field.
+                            Never set success to null.
                             """)
-                        .param("question", question)
-                        .param("format", converter.getFormat())
-                )
-                .tools(
-                        ragTools,
-                        bankingTools
-                )
-                .advisors(
-                        advisor -> advisor.param(
-                                ChatMemory.CONVERSATION_ID,
-                                conversationId
-                        )
-                )
-                .call()
-                .entity(converter);//to get Structured response
-                //.content();
+                    .user(user -> user
+                            .text("""
+                                    User question:
+
+                                    {question}
+
+                                    {format}
+                                    """)
+                            .param("question", question)
+                            .param("format", converter.getFormat())
+                    )
+                    .tools(
+                            ragTools,
+                            bankingTools
+                    )
+                    .advisors(
+                            advisor -> advisor.param(
+                                    ChatMemory.CONVERSATION_ID,
+                                    conversationId
+                            )
+                    )
+                    .call()
+                    .entity(converter);//to get Structured response
+            //.content();
+
     }
 
     public float[] generateEmbedding(String text) {

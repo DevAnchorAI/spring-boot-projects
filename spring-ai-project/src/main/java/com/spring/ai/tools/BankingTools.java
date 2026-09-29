@@ -56,25 +56,9 @@ public class BankingTools {
 
         System.out.println( "Tool called: getRecentTransactions()");
 
-        return List.of(
-                new RecentTransactionData(
-                        "TXN1001",
-                        "DOMESTIC_TRANSFER",
-                        new BigDecimal("25000"),
-                        "COMPLETED"
-                ),
-                new RecentTransactionData(
-                        "TXN1002",
-                        "DOMESTIC_TRANSFER",
-                        new BigDecimal("50000"),
-                        "PENDING"
-                ), new RecentTransactionData(
-                        "TXN1003",
-                        "BILL_PAYMENT",
-                        new BigDecimal("15000"),
-                        "FAILED"
-                )
-        );
+        return List.of(new RecentTransactionData("TXN1001", "DOMESTIC_TRANSFER", new BigDecimal("25000"), "COMPLETED"),
+                new RecentTransactionData("TXN1002", "DOMESTIC_TRANSFER", new BigDecimal("50000"), "PENDING"),
+                new RecentTransactionData("TXN1003", "BILL_PAYMENT", new BigDecimal("15000"), "FAILED"));
     }
 
 }
