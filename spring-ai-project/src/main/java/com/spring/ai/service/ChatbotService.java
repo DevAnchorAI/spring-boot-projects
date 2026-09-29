@@ -2,7 +2,9 @@ package com.spring.ai.service;
 
 import com.spring.ai.dto.BankingAssistantResponse;
 import com.spring.ai.dto.DocumentQAResponse;
+import com.spring.ai.guardrail.BankingOutputGuard;
 import com.spring.ai.guardrail.PromptInjectionGuard;
+import com.spring.ai.guardrail.PromptSafetyService;
 import com.spring.ai.tools.BankingTools;
 import com.spring.ai.tools.RagTools;
 import org.apache.poi.ss.formula.functions.T;
@@ -21,24 +23,27 @@ import java.util.stream.Collectors;
 public class ChatbotService {
 
     private final ChatClient chatClient;
-    private final ChatClient securityChatClient;
     private final KnowledgeService knowledgeService;
     private final BankingTools bankingTools;
     private final RagTools ragTools;
     private final EmbeddingModel embeddingModel;
     private  final PromptInjectionGuard promptInjectionGuard;
+    private final BankingOutputGuard bankingOutputGuard;
+    private final PromptSafetyService promptSafetyService;
 
     public ChatbotService(
             ChatClient.Builder chatClientBuilder,
             KnowledgeService knowledgeService,
             RagTools ragTools,
             BankingTools bankingTools,
-            ChatMemory chatMemory, EmbeddingModel embeddingModel, PromptInjectionGuard promptInjectionGuard) {
+            ChatMemory chatMemory, EmbeddingModel embeddingModel, PromptInjectionGuard promptInjectionGuard, BankingOutputGuard bankingOutputGuard, PromptSafetyService promptSafetyService) {
         this.knowledgeService = knowledgeService;
         this.ragTools = ragTools;
         this.bankingTools = bankingTools;
         this.embeddingModel = embeddingModel;
         this.promptInjectionGuard = promptInjectionGuard;
+        this.bankingOutputGuard = bankingOutputGuard;
+        this.promptSafetyService = promptSafetyService;
 
 
         MessageChatMemoryAdvisor memoryAdvisor =
@@ -47,28 +52,32 @@ public class ChatbotService {
 
         this.chatClient = chatClientBuilder.defaultAdvisors(memoryAdvisor).build();
 
-      //Use a separate, minimal ChatClient: to avoid security attack through the same contextual state.
-        this.securityChatClient =   chatClientBuilder.build();
     }
 
     public DocumentQAResponse ask(String question,String documentType) {
-        // 1. Generate embedding for user message
-//        float[] embedding = generateEmbedding(question);
-//        System.out.println("Embedding generated."+ Arrays.toString(embedding));
-//        System.out.println("Vector size: " + embedding.length);
 
-        // 1. Search Vector DB
+        //1. Basic input validation / prompt injection protection.
+        String validationResult = promptInjectionGuard.validate(question);
+
+        if (validationResult != null) {
+            return new DocumentQAResponse(validationResult, List.of());
+        }
+        //2. Optional LLM-based security classification.
+        if (promptSafetyService.isSafePrompt(question)) {
+
+            return new DocumentQAResponse("Your request cannot be processed.", List.of());
+        }
+        // 3. Search Vector DB
         //Retrieve relevant chunks
-        List<Document> documents =
-                knowledgeService.search(question, 4,documentType);
+        List<Document> documents = knowledgeService.search(question, 4,documentType);
 
-        // 2. Build context
+        // 4. Build context
         String context = documents.stream()
                 .map(Document::getText)
                 .collect(Collectors.joining("\n\n"));
 
 
-        // 3. Send context + question to LLM
+        // 5. Send context + question to LLM
        String answer =  chatClient
                 .prompt()
                 .system("""
@@ -89,7 +98,7 @@ public class ChatbotService {
                 .call()
                 .content();
 
-       //now add source of truth in response
+       //6. Source of truth / citations.
         List<String> sources = documents.stream()
                 .map(document ->
                         String.valueOf(
@@ -106,24 +115,38 @@ public class ChatbotService {
         );
     }
 
-    BeanOutputConverter<BankingAssistantResponse> converter =
-            new BeanOutputConverter<>(
-                    BankingAssistantResponse.class
-            );
+    BeanOutputConverter<BankingAssistantResponse> converter =  new BeanOutputConverter<>(  BankingAssistantResponse.class);
+
+
     public BankingAssistantResponse chatConversation(
             String conversationId,
             String question) {
         System.out.println("conversationId: ["+conversationId+"]");
-        BeanOutputConverter<BankingAssistantResponse> converter =
-                new BeanOutputConverter<>(
-                        BankingAssistantResponse.class
-                );
 
-        String validationResult = promptInjectionGuard.validate(question);
-        if(null != validationResult) {
-            return new BankingAssistantResponse(null,false,validationResult,null);
+        //1. Validate conversation ID
+        if (conversationId == null || conversationId.isBlank()) {
+
+            return new BankingAssistantResponse(null, false, "conversationId cannot be empty.", null);
         }
-            return chatClient
+        //2. first-level prompt injection protection
+        String validationResult =promptInjectionGuard.validate(question);
+        if (validationResult != null) {
+            System.out.println(  "Prompt injection blocked by keyword guard.");
+            return new BankingAssistantResponse(null, false, validationResult, null);
+        }
+
+
+       //3. Second-level security classification
+        if (!promptSafetyService.isSafePrompt(question)) {
+            System.out.println(     "Prompt injection blocked by AI security classifier.");
+            return new BankingAssistantResponse(null, false, "Your request cannot be processed.", null);
+        }
+
+        //4. Explicit output converter
+        BeanOutputConverter<BankingAssistantResponse> converter =new BeanOutputConverter<>(BankingAssistantResponse.class);
+
+        //5. Main ChatClient
+        BankingAssistantResponse response = chatClient
                     .prompt()
                     .system("""
                             You are an intelligent banking assistant.
@@ -185,6 +208,7 @@ public class ChatbotService {
                             ragTools,
                             bankingTools
                     )
+                    //Chat Memory
                     .advisors(
                             advisor -> advisor.param(
                                     ChatMemory.CONVERSATION_ID,
@@ -193,7 +217,9 @@ public class ChatbotService {
                     )
                     .call()
                     .entity(converter);//to get Structured response
-            //.content();
+
+        //6. OUTPUT GUARDRAIL: validate AI output
+        return bankingOutputGuard.validateResponse(response);
 
     }
 
@@ -202,4 +228,7 @@ public class ChatbotService {
         return embeddingModel
                 .embed(text);
     }
+
+
+
 }

@@ -6,31 +6,54 @@ import org.springframework.stereotype.Component;
 @Component
 public class BankingOutputGuard {
 
-    public void validate(BankingAssistantResponse response) {
+    //OUTPUT GUARDRAIL
+    public BankingAssistantResponse validateResponse(BankingAssistantResponse response) {
 
         if (response == null) {
-            throw new IllegalStateException(
-                    "AI returned empty response"
-            );
+            return new BankingAssistantResponse(null, false, "Unable to generate a valid response.", null);
         }
 
-        if (response.message() != null &&
-                containsSensitiveInstruction(
-                        response.message())) {
+        /*
+         * Never allow success to be null.
+         */
+        if (response.success() == null) {
 
-            throw new IllegalStateException(
-                    "Unsafe AI response"
-            );
+            return new BankingAssistantResponse(response.intent(), false, "Unable to generate a valid banking response.", response.data());
         }
+
+        /*
+         * Basic protection against accidental
+         * system prompt leakage.
+         */
+        if (containsSensitiveContent(
+                response.message())) {
+
+            return new BankingAssistantResponse(response.intent(), false, "Unable to provide the requested response.", null);
+        }
+
+        return response;
     }
 
-    private boolean containsSensitiveInstruction(
-            String message) {
+    /**
+     * Basic output leakage detection.
+     */
+    private boolean containsSensitiveContent(String message) {
 
-        String value =
-                message.toLowerCase();
+
+        if (message == null) {
+            return false;
+        }
+
+        String value =  message.toLowerCase();
+
 
         return value.contains("system prompt")
-                || value.contains("developer prompt");
+                || value.contains("developer prompt")
+                || value.contains("developer message")
+                || value.contains("api key")
+                || value.contains("secret key")
+                || value.contains("password");
     }
+
+
 }

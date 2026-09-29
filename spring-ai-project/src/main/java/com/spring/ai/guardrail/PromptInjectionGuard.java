@@ -23,22 +23,9 @@ public class PromptInjectionGuard {
             "bypass your restrictions",
             "disable your safety",
             "act as unrestricted",
-            "do anything now",
-            "DAN"
+            "do anything now"
     );
 
-    public boolean isSafe(String input) {
-
-        if (input == null || input.isBlank()) {
-            return false;
-        }
-
-        String normalized =
-                input.toLowerCase(Locale.ROOT);
-
-        return suspiciousPatterns.stream()
-                .noneMatch(normalized::contains);
-    }
 
     public String validate(String input) {
 
@@ -58,4 +45,18 @@ public class PromptInjectionGuard {
 
         return null;
     }
+
+    public boolean isSafe(String input) {
+
+        if (input == null || input.isBlank()) {
+            return false;
+        }
+
+        String normalized =
+                input.toLowerCase(Locale.ROOT);
+
+        return suspiciousPatterns.stream()
+                .noneMatch(normalized::contains);
+    }
+
 }
