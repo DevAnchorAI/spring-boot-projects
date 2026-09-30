@@ -27,4 +27,11 @@ public class ChatController {
         return chatbotService.chatConversation(request.conversationId(), request.question());
     }
 
+    @PostMapping("/chatAgent")
+    public BankingAssistantResponse chatAgent(
+            @RequestBody ChatRequest request) {
+
+        return chatbotService.chatAgent(request.conversationId(), request.question());
+    }
+
 }

@@ -5,5 +5,9 @@ public enum BankingIntent {
 
     ACCOUNT_BALANCE,
 
-    RECENT_TRANSACTIONS
+    RECENT_TRANSACTIONS,
+
+    DOCUMENT_QA,
+
+    GENERAL
 }

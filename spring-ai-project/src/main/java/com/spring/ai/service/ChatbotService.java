@@ -7,6 +7,8 @@ import com.spring.ai.guardrail.PromptInjectionGuard;
 import com.spring.ai.guardrail.PromptSafetyService;
 import com.spring.ai.tools.BankingTools;
 import com.spring.ai.tools.RagTools;
+import com.spring.ai.workflow.BankingAgentState;
+import com.spring.ai.workflow.BankingAgentWorkflow;
 import org.apache.poi.ss.formula.functions.T;
 import org.springframework.ai.chat.client.ChatClient;
 import org.springframework.ai.chat.client.advisor.MessageChatMemoryAdvisor;
@@ -30,13 +32,14 @@ public class ChatbotService {
     private  final PromptInjectionGuard promptInjectionGuard;
     private final BankingOutputGuard bankingOutputGuard;
     private final PromptSafetyService promptSafetyService;
+    private final BankingAgentWorkflow bankingAgentWorkflow;
 
     public ChatbotService(
             ChatClient.Builder chatClientBuilder,
             KnowledgeService knowledgeService,
             RagTools ragTools,
             BankingTools bankingTools,
-            ChatMemory chatMemory, EmbeddingModel embeddingModel, PromptInjectionGuard promptInjectionGuard, BankingOutputGuard bankingOutputGuard, PromptSafetyService promptSafetyService) {
+            ChatMemory chatMemory, EmbeddingModel embeddingModel, PromptInjectionGuard promptInjectionGuard, BankingOutputGuard bankingOutputGuard, PromptSafetyService promptSafetyService, BankingAgentWorkflow bankingAgentWorkflow) {
         this.knowledgeService = knowledgeService;
         this.ragTools = ragTools;
         this.bankingTools = bankingTools;
@@ -44,6 +47,7 @@ public class ChatbotService {
         this.promptInjectionGuard = promptInjectionGuard;
         this.bankingOutputGuard = bankingOutputGuard;
         this.promptSafetyService = promptSafetyService;
+        this.bankingAgentWorkflow = bankingAgentWorkflow;
 
 
         MessageChatMemoryAdvisor memoryAdvisor =
@@ -114,9 +118,6 @@ public class ChatbotService {
                 sources
         );
     }
-
-    BeanOutputConverter<BankingAssistantResponse> converter =  new BeanOutputConverter<>(  BankingAssistantResponse.class);
-
 
     public BankingAssistantResponse chatConversation(
             String conversationId,
@@ -223,12 +224,28 @@ public class ChatbotService {
 
     }
 
+    public BankingAssistantResponse chatAgent(
+            String conversationId,
+            String question) {
+
+        // Existing guardrail
+        String validationResult =
+                promptInjectionGuard.validate(question);
+
+        if (validationResult != null) {
+
+            return new BankingAssistantResponse(null, false, validationResult, null);
+        }
+
+        BankingAgentState state = new BankingAgentState(conversationId, question);
+
+        return bankingAgentWorkflow.execute(state);
+
+    }
     public float[] generateEmbedding(String text) {
 
         return embeddingModel
                 .embed(text);
     }
-
-
 
 }
