@@ -34,4 +34,14 @@ public class ChatController {
         return chatbotService.chatAgent(request.conversationId(), request.question());
     }
 
+    @PostMapping("/mcp/chat")
+    public BankingAssistantResponse mcpChat(
+            @RequestBody ChatRequest request) {
+
+        return chatbotService.mcpChat(
+                request.conversationId(),
+                request.question()
+        );
+    }
+
 }

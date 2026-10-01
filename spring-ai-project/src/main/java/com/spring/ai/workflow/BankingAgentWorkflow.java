@@ -5,6 +5,7 @@ import com.spring.ai.dto.BankingIntent;
 import com.spring.ai.service.KnowledgeService;
 import com.spring.ai.tools.BankingTools;
 import org.springframework.ai.chat.client.ChatClient;
+import org.springframework.ai.tool.ToolCallbackProvider;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.stereotype.Service;
 import org.springframework.ai.document.Document;
@@ -15,13 +16,15 @@ public class BankingAgentWorkflow {
     private final BankingTools bankingTools;
     private final KnowledgeService knowledgeService;
     private final ChatClient chatClient;
+    private final ToolCallbackProvider mcpTools;
     public BankingAgentWorkflow(
-            IntentClassifier intentClassifier, BankingTools bankingTools, KnowledgeService knowledgeService, ChatClient.Builder chatClientBuilder) {
+            IntentClassifier intentClassifier, BankingTools bankingTools, KnowledgeService knowledgeService, ChatClient.Builder chatClientBuilder, ToolCallbackProvider mcpTools) {
 
         this.intentClassifier =intentClassifier;
         this.bankingTools = bankingTools;
         this.knowledgeService = knowledgeService;
         this.chatClient = chatClientBuilder.build();
+        this.mcpTools = mcpTools;
     }
 
     public BankingAssistantResponse execute(
@@ -201,6 +204,7 @@ public class BankingAgentWorkflow {
                 chatClient
                         .prompt()
                         .user(prompt)
+                        .tools(mcpTools)
                         .call()
                         .content();
 

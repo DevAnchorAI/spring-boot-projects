@@ -16,6 +16,7 @@ import org.springframework.ai.chat.memory.ChatMemory;
 import org.springframework.ai.converter.BeanOutputConverter;
 import org.springframework.ai.document.Document;
 import org.springframework.ai.embedding.EmbeddingModel;
+import org.springframework.ai.tool.ToolCallbackProvider;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
@@ -33,13 +34,14 @@ public class ChatbotService {
     private final BankingOutputGuard bankingOutputGuard;
     private final PromptSafetyService promptSafetyService;
     private final BankingAgentWorkflow bankingAgentWorkflow;
+    private final ToolCallbackProvider mcpTools;
 
     public ChatbotService(
             ChatClient.Builder chatClientBuilder,
             KnowledgeService knowledgeService,
             RagTools ragTools,
             BankingTools bankingTools,
-            ChatMemory chatMemory, EmbeddingModel embeddingModel, PromptInjectionGuard promptInjectionGuard, BankingOutputGuard bankingOutputGuard, PromptSafetyService promptSafetyService, BankingAgentWorkflow bankingAgentWorkflow) {
+            ChatMemory chatMemory, EmbeddingModel embeddingModel, PromptInjectionGuard promptInjectionGuard, BankingOutputGuard bankingOutputGuard, PromptSafetyService promptSafetyService, BankingAgentWorkflow bankingAgentWorkflow, ToolCallbackProvider mcpTools) {
         this.knowledgeService = knowledgeService;
         this.ragTools = ragTools;
         this.bankingTools = bankingTools;
@@ -48,6 +50,7 @@ public class ChatbotService {
         this.bankingOutputGuard = bankingOutputGuard;
         this.promptSafetyService = promptSafetyService;
         this.bankingAgentWorkflow = bankingAgentWorkflow;
+        this.mcpTools = mcpTools;
 
 
         MessageChatMemoryAdvisor memoryAdvisor =
@@ -242,6 +245,33 @@ public class ChatbotService {
         return bankingAgentWorkflow.execute(state);
 
     }
+
+    public BankingAssistantResponse mcpChat(
+            String conversationId,
+            String question) {
+
+        return chatClient
+                .prompt()
+                .system("""
+                    You are a banking assistant.
+
+                    Use the MCP banking tool when
+                    real-time transaction information is required.
+
+                    Never invent banking information.
+                    """)
+                .user(question)
+                .tools(mcpTools)
+                .advisors(
+                        advisor -> advisor.param(
+                                ChatMemory.CONVERSATION_ID,
+                                conversationId
+                        )
+                )
+                .call()
+                .entity(BankingAssistantResponse.class);
+    }
+
     public float[] generateEmbedding(String text) {
 
         return embeddingModel
