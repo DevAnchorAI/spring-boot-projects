@@ -1,0 +1,13 @@
+spring:
+  application:
+    name: banking-mcp-server
+
+  ai:
+    mcp:
+      server:
+        name: banking-mcp-server
+        version: 1.0.0
+        protocol: STREAMABLE
+
+server:
+  port: 8081
