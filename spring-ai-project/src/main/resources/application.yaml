@@ -5,6 +5,7 @@ spring:
       url: jdbc:postgresql://localhost:5432/ai_db
       username: postgres
       password: postgres
+      driver-class-name: org.postgresql.Driver
   jpa:
     properties:
       hibernate:
@@ -19,12 +20,12 @@ spring:
     vectorstore:
       pgvector:
         initialize-schema: true
-#implement PostgreSQL persistent Chat Memory
     chat:
       memory:
         repository:
           jdbc:
             initialize-schema: always
+            platform: postgresql
     mcp:
       client:
         enabled: true
