@@ -17,27 +17,29 @@ public class ChatController {
     @PostMapping("/ask")
     public DocumentQAResponse chat(@RequestBody String message, @RequestParam(required = false)
     String documentType) {
+
+        System.out.println("called: /ask");
         return chatbotService.ask(message,documentType);
     }
 
     @PostMapping("/chat")
     public BankingAssistantResponse chatConversation(
             @RequestBody ChatRequest request) {
-
+        System.out.println("called: /chat");
         return chatbotService.chatConversation(request.conversationId(), request.question());
     }
 
     @PostMapping("/chatAgent")
     public BankingAssistantResponse chatAgent(
             @RequestBody ChatRequest request) {
-
+        System.out.println("called: /chatAgent");
         return chatbotService.chatAgent(request.conversationId(), request.question());
     }
 
-    @PostMapping("/mcp/chat")
+    @PostMapping("/mcpChat")
     public BankingAssistantResponse mcpChat(
             @RequestBody ChatRequest request) {
-
+        System.out.println("called: /mcpChat");
         return chatbotService.mcpChat(
                 request.conversationId(),
                 request.question()
