@@ -5,6 +5,7 @@ import com.sks.dto.ResponseDto;
 import com.sks.exception.AccountNotFoundException;
 import com.sks.exception.InsufficientBalanceException;
 import com.sks.model.Account;
+import com.sks.model.Transfer;
 import com.sks.service.TransferService;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.validation.Valid;
@@ -30,10 +31,10 @@ public class TransferController {
     }
 
     @PostMapping
-    public ResponseEntity<String> transfer(
+    public ResponseEntity<Transfer> transfer(
             @Valid @RequestBody PaymentRequest request) {
-        transferService.transfer(request);
-        return ResponseEntity.ok("Transfer request accepted");
+        Transfer transfer =transferService.transfer(request);
+        return ResponseEntity.ok(transfer);
     }
 
     @GetMapping("/getAccount/{accountNumber}")
